@@ -15,9 +15,6 @@
     <name>api-gateway</name>
     <description>Edge routing, JWT validation and rate limiting</description>
 
-    <properties>
-        <maven.compiler.release>17</maven.compiler.release>
-    </properties>
 
     <dependencies>
         <dependency>
