@@ -12,4 +12,13 @@
     </parent>
 
     <artifactId>common-web</artifactId>
+    <name>common-web</name>
+    <description>Shared web library: correlation id filter and ProblemDetail error handling (L0-4)</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+    </dependencies>
 </project>
