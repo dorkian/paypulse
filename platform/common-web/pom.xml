@@ -25,5 +25,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Bean Validation (@Valid, @NotBlank). Test scope only: this library's main code
+             doesn't use it. Each service adds the starter itself when it validates DTOs. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

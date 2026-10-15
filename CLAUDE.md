@@ -9,6 +9,8 @@ Progress board: https://trello.com/b/FGeGfVoE/paypulse-interview-quest (one card
 - **When Ash asks you to write code, use the `explained-code` skill** (`.claude/skills/explained-code/`).
   Ash learns by reading: code with teaching comments in the files, a plain explanation in chat,
   real test results, and exactly one next action.
+- **Follow the strict standards** in `.claude/skills/explained-code/standards.md` (layering, design
+  patterns, REST, persistence, messaging, testing, style, Definition of Done) and say why for every design decision.
 - One card step at a time. One branch per card. Never commit to `main`; don't commit or push
   unless asked; stage specific paths, never `git add -A`.
 - Java 21: `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` before running Maven.

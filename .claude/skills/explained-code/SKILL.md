@@ -1,6 +1,6 @@
 ---
 name: explained-code
-description: Use in the PayPulse repo whenever Ash asks to write, implement, add or scaffold code from a spec or a Trello card step (for example "write the code with spec", "do L0-4 step 3", "implement this part", "create the filter / entity / controller / config"). Writes the code with teaching comments inside the files AND a plain-language walkthrough in chat, then runs and verifies it. Ash learns by reading, not by typing.
+description: Use in the PayPulse repo when Ash asks to write, implement or scaffold code from a spec or Trello card step ("write the code with spec", "do L0-4 step 3", "implement this part", "create the filter/entity/controller"). Writes code to the strict standards in standards.md, with teaching comments in the files and a plain explanation of every design decision in chat, then runs and verifies it.
 metadata:
   provenance: self-improving-skills
 
@@ -15,10 +15,23 @@ Applies to this repo only (`paypulse`). The reference for tone and depth is
 `platform/common-web/src/main/java/com/paypulse/common/web/CorrelationIdFilter.java`: numbered
 step comments, a "why" next to every non-obvious line, a SECURITY note where one is real.
 
-## 0. Before writing (3 lines in chat)
+## Engineering standards: mandatory
+**Before writing any backend code, read `standards.md` in this folder.** It defines the service
+structure, the design patterns to use (and not use), REST, persistence, messaging, resilience,
+security, logging, testing, code style and the Definition of Done. It is strict: follow it, cite it
+by section number (S1 to S14) in the chat explanation, and if a request conflicts with it, say so in
+one line with the reason and follow the standard unless Ash explicitly overrides it.
+
+Two principles override everything else in it:
+1. **Correct over clever.** Use the established pattern for the problem, not a novel one.
+2. **No pattern without a problem.** Strict means right-sized (YAGNI): never add a layer, interface or
+   pattern the current card does not need. Every pattern used is named in the Javadoc and justified.
+
+## 0. Before writing (4 lines in chat)
 - Which card/step this is (for example "L0-4 step 3") and what it unlocks.
 - Which files you will create or change.
 - One sentence on how it fits the architecture (`plan.md` in the second-brain note).
+- Which standards sections apply (for example "S1, S4.3, S10").
 
 Do **one step at a time**. Stop after each step. Never run ahead to the next one.
 
@@ -56,6 +69,8 @@ Code defaults (change only if Ash says so):
 - For anything with behaviour worth proving, also do one **mutation check** (break the key line in a
   throwaway copy, watch the test fail, discard the copy) and report it in one line.
 - Never say "this should work". Either you ran it, or say "not run".
+- Before handing over, do the **Definition of Done** self-review (`standards.md` S14) and report which
+  items are met and which are intentionally out of scope for this step.
 
 ## 3. The chat explanation (after the code), in this order
 
@@ -64,7 +79,15 @@ Keep it short, simple and structured. Short sentences. Each section a few lines.
 1. **What I built**: one line per file (path + purpose).
 2. **How it works**: walk through it in the order things happen at runtime (request in, ... response out).
    Use the project's real names. A tiny example with real values beats an abstract description.
-3. **Why this way**: the choice made and the one alternative rejected, in one line each.
+3. **Design decisions** (a table, one row per real decision, no filler rows):
+
+   | Decision | Pattern / practice | Why | Alternative rejected | Trade-off | Standard |
+   |---|---|---|---|---|---|
+
+   Example row: `Entities stay inside the service | DTO + service layer | no lazy-loading surprises,
+   no leaked fields | return entities from controllers | extra mapping code | S1.3`.
+   Name each design pattern by its proper name. If a decision is architecture-level (messaging topic,
+   locking strategy, API versioning, tenancy model), propose a short ADR in `docs/adr/` and ask before writing it.
 4. **Traps**: 1 to 3 things that commonly go wrong here, and how this code avoids them.
 5. **Run it**: exact commands and the expected output. Say what you actually saw when you ran them.
 6. **Interview angle**: the 2 or 3 questions this step answers, with a **60-second spoken answer**
