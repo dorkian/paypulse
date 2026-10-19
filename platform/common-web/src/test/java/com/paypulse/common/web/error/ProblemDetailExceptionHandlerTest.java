@@ -20,6 +20,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.PathVariable;
 
 class ProblemDetailExceptionHandlerTest {
 
@@ -84,6 +86,33 @@ class ProblemDetailExceptionHandlerTest {
                 .andExpect(jsonPath("$.correlationId").value("abc-123"));
     }
 
+    @Test
+    void malformedJsonMapsTo400NotFiveHundred() throws Exception {
+        mvc.perform(post("/test/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(CorrelationIdFilter.HEADER_NAME, "abc-123")
+                        .content("{bad"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:paypulse:problem:bad-request"))
+                .andExpect(jsonPath("$.correlationId").value("abc-123"));
+    }
+
+    @Test
+    void badPathVariableMapsTo400() throws Exception {
+        mvc.perform(get("/test/items/not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type").value("urn:paypulse:problem:bad-request"));
+    }
+
+    @Test
+    void wrongHttpMethodMapsTo405() throws Exception {
+        // /test/not-found only accepts GET
+        mvc.perform(post("/test/not-found"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.type").value("urn:paypulse:problem:method-not-allowed"));
+    }
+
     // --- test-only classes -------------------------------------------------
 
     @RestController
@@ -112,6 +141,11 @@ class ProblemDetailExceptionHandlerTest {
         void boom() {
             throw new IllegalStateException("secret-db-password");
         }
+
+        @GetMapping("/test/items/{id}")
+        void item(@PathVariable UUID id) {
+        }
+
     }
 
     record Body(@NotBlank String name) {

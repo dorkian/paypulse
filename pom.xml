@@ -18,6 +18,10 @@
     <properties>
         <java.version>21</java.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
+        <!-- Keep method parameter names in the compiled classes. Spring needs them for
+        @PathVariable / @RequestParam without an explicit name. spring-boot-starter-parent
+        does this for you, but we import the BOM instead of inheriting from it. -->
+        <maven.compiler.parameters>true</maven.compiler.parameters>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Spring Cloud 2025.1.x is the release train for Boot 4.0.x -->
         <spring-boot.version>4.0.8</spring-boot.version>
