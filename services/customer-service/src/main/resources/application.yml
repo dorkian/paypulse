@@ -2,11 +2,35 @@ spring:
   application:
     name: customer-service
 
+  datasource:
+    # Local defaults match infra/compose. The password has NO default on purpose:
+    # a missing secret must stop the app at startup, never fall back to a guess.
+    url: ${CUSTOMER_DB_URL:jdbc:postgresql://localhost:5432/customer}
+    username: ${CUSTOMER_DB_USER}
+    password: ${CUSTOMER_DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      # validate = on startup, Hibernate only CHECKS that tables match the entities.
+      # Flyway is the only thing allowed to change the schema.
+      ddl-auto: validate
+    # The Boot default is true: it keeps a DB connection open during view rendering and
+    # allows hidden lazy-loading queries inside controllers. We return DTOs, so turn it off.
+    open-in-view: false
+
 server:
   port: 8082
+  # On shutdown, finish in-flight requests before stopping (no half-done requests on deploy).
+  shutdown: graceful
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        # Adds /actuator/health/liveness and /readiness for Kubernetes-style checks.
+        enabled: true
+
