@@ -2,6 +2,34 @@ spring:
   application:
     name: api-gateway
 
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # One route per resource family (not a catch-all /api/**): when invoice-service
+            # arrives, /api/v1/invoices/** goes there and ownership stays obvious.
+            - id: customer-service
+              # Where to send matching requests. The env var lets the same jar run on a laptop
+              # (default), in Docker Compose or in Kubernetes. Without it the address would be
+              # frozen inside the build.
+              uri: ${CUSTOMER_SERVICE_URL:http://localhost:8082}
+              predicates:
+                # "Take every request whose path starts with /api/v1/customers".
+                # Without a predicate the route would match nothing (or everything).
+                - Path=/api/v1/customers/**
+              # No StripPrefix filter on purpose: customer-service uses the very same path,
+              # so the gateway forwards it unchanged.
+
+          httpclient:
+            # Max time (milliseconds) to open the connection to a service. If a service is
+            # down or unreachable, callers get an error after 2 s instead of waiting the
+            # default 30 s.
+            connect-timeout: 2000
+            # Max time to wait for the service's answer. Without it, one frozen service would
+            # hold connections open until the gateway stops answering even for healthy services.
+            response-timeout: 10s
+
 server:
   port: 8080
 
