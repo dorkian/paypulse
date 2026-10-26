@@ -24,6 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
+
 
 /**
  * End-to-end test of the customer API: real Spring app, real Flyway migration, real
@@ -69,6 +72,23 @@ class CustomerApiIntegrationTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value("Mario"));
     }
+
+    @Test
+    void locationUsesTheAddressTheClientUsedWhenBehindAGateway() throws Exception {
+        String json = """
+                {"tenantId":"%s","name":"Gina","email":"gina@example.com"}""".formatted(UUID.randomUUID());
+
+        // What the gateway sends: the address the CLIENT used, not the service's own.
+        mvc.perform(post("/api/v1/customers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Forwarded-Host", "api.example.com")
+                        .header("X-Forwarded-Proto", "https")
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location",
+                        startsWith("https://api.example.com/api/v1/customers/")));
+    }
+
 
     @Test
     void getReturnsTheSameData() throws Exception {

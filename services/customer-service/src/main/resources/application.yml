@@ -22,6 +22,13 @@ server:
   port: 8082
   # On shutdown, finish in-flight requests before stopping (no half-done requests on deploy).
   shutdown: graceful
+  # Behind the api-gateway the service only sees the gateway's address. The gateway sends
+  # X-Forwarded-Host/Proto/Port with the address the CLIENT used; "framework" makes Spring
+  # use them, so links we build (the Location header) point to the gateway.
+  # SECURITY: only safe when a trusted proxy sits in front. If this service were reachable
+  # directly from the internet, anyone could fake its address. In production the network
+  # must allow traffic to this service only from the gateway.
+  forward-headers-strategy: framework
 
 management:
   endpoints:
