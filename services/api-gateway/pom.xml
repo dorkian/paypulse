@@ -39,6 +39,39 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- Jib: builds the Docker image straight from Maven, no Dockerfile.
+                 Version comes from <pluginManagement> in the root pom.
+                 Run: mvn package jib:dockerBuild (builds into your local Docker). -->
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <configuration>
+                    <from>
+                        <platforms>
+                            <!-- Jib's default is amd64. On this Apple Silicon Mac that image runs
+                                 emulated (slow, can crash). Build for the CPU we run on.
+                                 On an Intel/AMD CI runner this must change (later: multi-arch). -->
+                            <platform>
+                                <architecture>arm64</architecture>
+                                <os>linux</os>
+                            </platform>
+                        </platforms>
+                    </from>
+                    <to>
+                        <!-- :dev = local image, never pushed to a registry in L0 -->
+                        <image>paypulse/api-gateway:dev</image>
+                    </to>
+                    <container>
+                        <!-- 8080 = HTTP, 5005 = debugger. Documentation only; compose decides
+                             what is reachable. The debug agent is switched on at run time with
+                             JAVA_TOOL_OPTIONS, never baked into the image (S8.4). -->
+                        <ports>
+                            <port>8080</port>
+                            <port>5005</port>
+                        </ports>
+                    </container>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
