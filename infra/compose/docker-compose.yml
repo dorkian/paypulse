@@ -3,6 +3,7 @@ name: paypulse
 # Local dev only. Credentials live in .env (copy from .env.example).
 # Host ports: postgres 5432, redis 6379, kafka 9092, rabbitmq 5672/15672,
 # redpanda-console 8085, keycloak 8180, grafana 3000, otlp 4317/4318.
+# apps profile (localhost only): api-gateway 8080 (debug 5006), customer-service 8082 (debug 5005).
 
 services:
   # --- infra ---
@@ -37,6 +38,49 @@ services:
       timeout: 3s
       retries: 10
 
+
+  # --- apps: our own services, run as containers (images built by `mvn package jib:dockerBuild`) ---
+  # Separate profile so you can start only the infra and run ONE service from IntelliJ (Mode B).
+  customer-service:
+    image: paypulse/customer-service:dev
+    # Starting point. If `docker inspect` shows OOMKilled=true, raise it (JVM heap + metaspace + threads).
+    mem_limit: 768m
+    profiles: ["apps"]
+    environment:
+      # Inside the compose network the database is called "postgres" (the service name).
+      # "localhost" here would be the container itself, where nothing listens on 5432.
+      CUSTOMER_DB_URL: jdbc:postgresql://postgres:5432/customer
+      # Same credentials as the infra; read from the git-ignored .env, never written here (S8.2).
+      CUSTOMER_DB_USER: ${POSTGRES_USER:?set in .env}
+      CUSTOMER_DB_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      # JAVA_TOOL_OPTIONS is read by every JVM at start. This one opens the debug port:
+      # server=y   -> the JVM listens and the IDE connects to it
+      # suspend=n  -> start normally, do not wait for a debugger (suspend=y: wait, for startup bugs)
+      # address=*:5005 -> listen on all interfaces INSIDE the container (see ports for who can reach it)
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    ports:
+      # 127.0.0.1: = reachable from this Mac only. Without it Docker publishes on every network
+      # interface, and a debug port lets anyone on your Wi-Fi run code in the JVM (S8.4).
+      - "127.0.0.1:8082:8082"
+      - "127.0.0.1:5005:5005"
+    depends_on:
+      postgres:
+        condition: service_healthy  # wait until Postgres accepts connections, else Flyway fails at boot
+    # No healthcheck yet: the image has no curl. Real probes come in L7.
+
+  api-gateway:
+    image: paypulse/api-gateway:dev
+    mem_limit: 768m
+    profiles: ["apps"]
+    environment:
+      # Default = the customer-service container. The ":-" lets Mode B override it from your shell:
+      # CUSTOMER_SERVICE_URL=http://host.docker.internal:8082 (= the service running in IntelliJ).
+      CUSTOMER_SERVICE_URL: ${CUSTOMER_SERVICE_URL:-http://customer-service:8082}
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    ports:
+      - "127.0.0.1:8080:8080"
+      # Container port is 5005 too, but host port 5006 so it does not clash with customer-service.
+      - "127.0.0.1:5006:5005"
 
   # --- messaging ---
   kafka:

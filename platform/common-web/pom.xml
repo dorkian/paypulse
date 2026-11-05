@@ -15,6 +15,12 @@
     <name>common-web</name>
     <description>Shared web library: correlation id filter and ProblemDetail error handling (L0-4)</description>
 
+    <properties>
+        <!-- common-web is a library: it has no main() method, so it never becomes a Docker image.
+             Without this flag, `mvn jib:dockerBuild` over the whole project stops here with
+             "Main class was not found". The services (which do have a main) still build images. -->
+        <jib.skip>true</jib.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

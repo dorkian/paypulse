@@ -60,6 +60,17 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot.version}</version>
                 </plugin>
+                <!-- Jib builds a Docker image straight from Maven (no Dockerfile).
+                It is NOT managed by the Spring Boot BOM, and a plugin with no version
+                "floats": a build next month could use a different Jib than today.
+                So the version is written down once, here. Each service adds the plugin
+                to its own <build> without a version.
+                Version checked on Maven Central 2026-10-26. -->
+                <plugin>
+                    <groupId>com.google.cloud.tools</groupId>
+                    <artifactId>jib-maven-plugin</artifactId>
+                    <version>3.5.2</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
