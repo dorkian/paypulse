@@ -23,7 +23,17 @@ mvn -q verify                                      # build + test everything
 mvn -pl services/customer-service spring-boot:run  # run one service
 ```
 
-Requires Java 21 and Maven 3.9+.
+Requires Java 21 and Maven 3.9+. Shortcuts (`make help` lists them; Java 21 is pinned for you):
+
+```bash
+make up                       # infra profile (Postgres, Redis); PROFILE=messaging|identity|obs|apps for the others
+make dev SERVICE=customer     # run one service from Maven (customer or gateway)
+make test                     # build and test everything
+make logs SERVICE=kafka       # follow one container's logs
+make down                     # stop everything, data kept
+```
+
+The Makefile has its own tests: `scripts/test-makefile.sh` (dry run, finishes in a second).
 
 ## Local infrastructure
 
