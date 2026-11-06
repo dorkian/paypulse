@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: ledger-service
+
+  datasource:
+    # Local default matches infra/compose (database `ledger`). The password has NO default on purpose:
+    # a missing secret must stop the app at startup, never fall back to a guess.
+    url: ${LEDGER_DB_URL:jdbc:postgresql://localhost:5432/ledger}
+    username: ${LEDGER_DB_USER}
+    password: ${LEDGER_DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      # validate = on startup Hibernate only CHECKS that tables match the entities; Flyway alone changes the schema.
+      ddl-auto: validate
+    # Boot default is true (hidden lazy loading outside the service layer). We return DTOs, so off.
+    open-in-view: false
