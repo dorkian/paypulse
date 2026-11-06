@@ -12,6 +12,7 @@
     <modules>
         <module>platform/common-web</module>
         <module>services/customer-service</module>
+        <module>services/ledger-service</module>
         <module>services/api-gateway</module>
     </modules>
 
