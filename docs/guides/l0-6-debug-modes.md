@@ -144,7 +144,7 @@ Port `5005`, "Use module classpath" = `customer-service`. Apply.
 - **If IntelliJ will not connect**, prove the container side is right with `jdb -attach localhost:5005` and tell me what it prints.
 
 ### B3. `suspend=n` versus `suspend=y`
-Change the compose value to `suspend=y`, run `docker compose --profile apps up -d --force-recreate customer-service`, and watch
+Change the compose value to `suspend=y`, run `docker compose --profile infra --profile apps up -d --force-recreate customer-service`, and watch
 `docker logs`: the app **does not start** until a debugger attaches. Attach IntelliJ, it continues. Use `suspend=y` only for bugs
 that happen during startup. Put `suspend=n` back.
 
@@ -153,7 +153,7 @@ Edit a line in `get`, do NOT rebuild, debug again: the breakpoint turns grey or 
 still running the **old** jar. The loop after every code change in Mode A is:
 ```
 mvn -q package jib:dockerBuild -DskipTests -pl services/customer-service -am
-docker compose --profile apps up -d --force-recreate customer-service
+docker compose --profile infra --profile apps up -d --force-recreate customer-service
 ```
 
 ---
@@ -161,7 +161,8 @@ docker compose --profile apps up -d --force-recreate customer-service
 ## PART C: Mode B, the daily workflow
 
 ### C1. Free the ports
-`docker compose --profile apps stop customer-service` (otherwise 8082 and 5005 clash with IntelliJ).
+Always pass **both** profiles: the apps depend on `postgres`, which lives in `infra`; with `--profile apps` alone Compose says "depends on undefined service postgres".
+`docker compose --profile infra --profile apps stop customer-service` (otherwise 8082 and 5005 clash with IntelliJ).
 
 ### C2. Run the service from IntelliJ
 Create a **Spring Boot** run configuration for `CustomerServiceApplication`, JDK 21, and add the environment variables
@@ -174,7 +175,7 @@ Start it with the **bug icon**.
 The gateway container's `localhost` is itself, so it cannot see your IntelliJ service. Docker Desktop provides the name
 `host.docker.internal` for "the Mac". Recreate the gateway with the override:
 ```
-CUSTOMER_SERVICE_URL=http://host.docker.internal:8082 docker compose --profile apps up -d --force-recreate api-gateway
+CUSTOMER_SERVICE_URL=http://host.docker.internal:8082 docker compose --profile infra --profile apps up -d --force-recreate api-gateway
 curl -i localhost:8080/api/v1/customers/<id>
 ```
 Expected: the **same breakpoint** stops, this time in the IntelliJ-run process. *(Most likely works on Docker Desktop, not verified
@@ -190,7 +191,7 @@ by me; if the gateway answers 502/503, tell me the output.)*
 ---
 
 ## PART D: finish
-- Reset: `docker compose --profile apps down` and `unset CUSTOMER_SERVICE_URL`.
+- Reset: `docker compose --profile infra --profile apps down` and `unset CUSTOMER_SERVICE_URL`.
 - Definition of Done (S14): `mvn -q verify` green from the root; `docker compose config -q` valid; no `.env` staged
   (`git status`); no TODOs; comments on every new compose key and Jib option.
 - Commits: `build: pin jib and build arm64 images` , `infra: apps profile with debug ports on localhost`, `docs: debugging guide in README`.
