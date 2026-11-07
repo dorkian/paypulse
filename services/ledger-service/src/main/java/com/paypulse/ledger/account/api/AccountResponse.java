@@ -1,7 +1,6 @@
 package com.paypulse.ledger.account.api;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.paypulse.ledger.persistence.Account;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -30,16 +29,5 @@ public record AccountResponse(
     public AccountResponse {
         balance = balance.setScale(MONEY_SCALE, RoundingMode.HALF_EVEN);
         creditLimit = creditLimit.setScale(MONEY_SCALE, RoundingMode.HALF_EVEN);
-    }
-
-    /** Converts an entity into the response. The single place this mapping lives. */
-    public static AccountResponse from(Account account) {
-        return new AccountResponse(
-                account.getId(),
-                account.getOwnerId(),
-                account.getCurrency(),
-                account.getBalance(),
-                account.getCreditLimit(),
-                account.getCreatedAt());
     }
 }

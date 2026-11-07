@@ -36,14 +36,26 @@ public class AccountService {
     public AccountResponse openAccount(OpenAccountRequest request) {
         Account saved = accounts.save(new Account(request.ownerId(), request.currency(), clock.instant()));
         log.info("Account opened id={}", saved.getId());
-        return AccountResponse.from(saved);
+        return toResponse(saved);
     }
 
     // readOnly: Hibernate skips dirty checking, and it documents that this never writes.
     @Transactional(readOnly = true)
     public AccountResponse getAccount(UUID id) {
         return accounts.findById(id)
-                .map(AccountResponse::from)
+                .map(AccountService::toResponse)
                 .orElseThrow(() -> new AccountNotFoundException(id));
+    }
+
+    // The one place an entity becomes a DTO. It lives here, not in the api package, so the
+    // dependency direction stays api -> service (the web layer never imports persistence).
+    private static AccountResponse toResponse(Account account) {
+        return new AccountResponse(
+                account.getId(),
+                account.getOwnerId(),
+                account.getCurrency(),
+                account.getBalance(),
+                account.getCreditLimit(),
+                account.getCreatedAt());
     }
 }
