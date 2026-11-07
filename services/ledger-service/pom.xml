@@ -15,9 +15,21 @@
     <name>ledger-service</name>
     <description>Append-only double-entry journal and account balances</description>
 
-    <!-- Only what L1-1 needs (schema + entities). Web, validation and actuator are added by the
-         card that first uses them (L1-4), so every dependency has a reason. -->
+    <!-- Every dependency has a reason. F1 adds the web layer: common-web (errors, correlation id),
+         webmvc (controllers) and validation (request checks). -->
     <dependencies>
+        <dependency>
+            <groupId>com.paypulse</groupId>
+            <artifactId>common-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -44,6 +56,11 @@
         </dependency>
         <!-- Real PostgreSQL in a throwaway container for the tests (never H2: constraints and triggers
              behave differently there, and this card IS about constraints and triggers). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-testcontainers</artifactId>
